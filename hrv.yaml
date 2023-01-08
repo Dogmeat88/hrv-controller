@@ -60,10 +60,14 @@ interval:
             - logger.log: "The sensor value is below x!"
             - lambda: |-
                 auto call = id(hrv_thermostat).make_call();
-                call.set_mode("OFF");
+                call.set_mode("HEAT");
                 call.perform();
           else:
             - logger.log: "The sensor value is above x!"
+            - lambda: |-
+                auto call = id(hrv_thermostat).make_call();
+                call.set_mode("COOL");
+                call.perform();
 
 climate:
   - platform: thermostat
@@ -72,15 +76,23 @@ climate:
     sensor: house_temp
     min_cooling_off_time: 300s
     min_cooling_run_time: 300s
+    min_heating_off_time: 300s
+    min_heating_run_time: 300s
     min_idle_time: 30s
+    heat_action:
+      - fan.turn_on: hrv_fan
     cool_action:
       - fan.turn_on: hrv_fan
     idle_action:
       - fan.turn_off: hrv_fan
-    default_preset: Home
+    default_preset: Low
     preset:
       - name: Low
-        fan_mode: LOW
+#        fan_mode: LOW
+        default_target_temperature_high: 20
+        default_target_temperature_low: 20
       - name: Medium
-        fan_mode: LOW
+#        fan_mode: LOW
+        default_target_temperature_high: 20
+        default_target_temperature_low: 20
 
