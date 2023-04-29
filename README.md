@@ -7,4 +7,8 @@ This is a smart replacement for an HRV/ERV controller
 * [RobotDyn Dimmer/Motor Controller module](https://s.click.aliexpress.com/e/_DlDin6n)
 * [Mains to 5v DC adapter](https://s.click.aliexpress.com/e/_DBtTMj5)
 
+## Circuit Diagram
+![](assets/hrv-controller-circuit.png)
 
+## Assembly
+![](assets/hrv-controller-assembly.png)

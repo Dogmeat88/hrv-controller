@@ -34,16 +34,17 @@ fan:
     id: hrv_fan
 
 dallas:
-  - pin: GPIO12
+  pin:
+    number: GPIO13
 
 sensor:
   - platform: dallas
-    address: 0xd7e589f71e64ff28
+    address: 0x900621b458bd0e28
     name: "Attic Temperature"
     id: attic_temp
 
   - platform: dallas
-    address: 0xd7e589f71e64ff28
+    address: 0x043c18f648b6a628
     name: "House Temperature"
     id: house_temp
 
@@ -55,15 +56,15 @@ interval:
           args: [ 'id(attic_temp).get_temp_c()', 'id(house_temp).get_temp_c()' ]
       - if:
           condition:
-            lambda: 'return id(attic_temp).get_temp_c() < id(house_temp).get_temp_c();'
+            lambda: 'return id(attic_temp).get_temp_c() > id(house_temp).get_temp_c();'
           then:
-            - logger.log: "The sensor value is below x!"
+            - logger.log: "Set to 'Heat' mode"
             - lambda: |-
                 auto call = id(hrv_thermostat).make_call();
                 call.set_mode("HEAT");
                 call.perform();
           else:
-            - logger.log: "The sensor value is above x!"
+            - logger.log: "Set to 'Cool' mode"
             - lambda: |-
                 auto call = id(hrv_thermostat).make_call();
                 call.set_mode("COOL");
@@ -85,14 +86,9 @@ climate:
       - fan.turn_on: hrv_fan
     idle_action:
       - fan.turn_off: hrv_fan
-    default_preset: Low
+    default_preset: Default
     preset:
-      - name: Low
-#        fan_mode: LOW
+      - name: Default
         default_target_temperature_high: 20
-        default_target_temperature_low: 20
-      - name: Medium
-#        fan_mode: LOW
-        default_target_temperature_high: 20
-        default_target_temperature_low: 20
+        default_target_temperature_low: 18
 
