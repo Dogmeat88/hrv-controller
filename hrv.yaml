@@ -18,10 +18,6 @@ ota:
 logger:
   baud_rate: 0
 
-switch:
-  - platform: restart
-    name: "HRV Controller Restart"
-
 output:
   - platform: ac_dimmer
     id: hrv_motor
