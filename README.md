@@ -12,3 +12,6 @@ This is a smart replacement for an HRV/ERV controller
 
 ## Assembly
 ![](assets/hrv-controller-assembly.png)
+
+## Display
+![](assets/ha-sensor.png)

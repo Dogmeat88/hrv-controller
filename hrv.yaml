@@ -18,6 +18,10 @@ ota:
 logger:
   baud_rate: 0
 
+switch:
+  - platform: restart
+    name: "HRV Controller Restart"
+
 output:
   - platform: ac_dimmer
     id: hrv_motor
@@ -53,22 +57,28 @@ interval:
     then:
       - logger.log:
           format: "Comparing values: Attic: %.1f, House: %.1f"
-          args: [ 'id(attic_temp).get_temp_c()', 'id(house_temp).get_temp_c()' ]
+          args: [ 'id(attic_temp).get_temp_c()', 'id(house_temp).get_temp_c()']
       - if:
           condition:
-            lambda: 'return id(attic_temp).get_temp_c() > id(house_temp).get_temp_c();'
+            lambda: 'return id(hrv_thermostat).mode == climate::CLIMATE_MODE_OFF;'
           then:
-            - logger.log: "Set to 'Heat' mode"
-            - lambda: |-
-                auto call = id(hrv_thermostat).make_call();
-                call.set_mode("HEAT");
-                call.perform();
+            - logger.log: "Override enabled... preventing mode update"
           else:
-            - logger.log: "Set to 'Cool' mode"
-            - lambda: |-
-                auto call = id(hrv_thermostat).make_call();
-                call.set_mode("COOL");
-                call.perform();
+            - if:
+                condition:
+                  lambda: 'return id(attic_temp).get_temp_c() > id(house_temp).get_temp_c();'
+                then:
+                  - logger.log: "Set to 'Heat' mode"
+                  - lambda: |-
+                      auto call = id(hrv_thermostat).make_call();
+                      call.set_mode("HEAT");
+                      call.perform();
+                else:
+                  - logger.log: "Set to 'Cool' mode"
+                  - lambda: |-
+                      auto call = id(hrv_thermostat).make_call();
+                      call.set_mode("COOL");
+                      call.perform();
 
 climate:
   - platform: thermostat
@@ -89,6 +99,6 @@ climate:
     default_preset: Default
     preset:
       - name: Default
-        default_target_temperature_high: 20
+        default_target_temperature_high: 19
         default_target_temperature_low: 18
 
