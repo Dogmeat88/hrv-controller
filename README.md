@@ -12,7 +12,7 @@ Setting the mode to 'off' will override the automatic mode setting.
 * [Mains to 5v DC adapter](https://s.click.aliexpress.com/e/_DBtTMj5)
 
 
-##Installation
+## Installation
 
 Install [ESPHome](https://esphome.io/guides/installing_esphome.html)
 
