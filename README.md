@@ -19,7 +19,6 @@ Create a ```secrets.yaml``` file and add your Wi-Fi credentials in this format
 wifi_ssid: '<SSID>'
 wifi_password: '<PASSWORD>'
 
-
 Then run: ```esphome run hrv.yaml```
 
 ## Display
