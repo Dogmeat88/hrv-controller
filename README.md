@@ -25,6 +25,8 @@ wifi_password: '<PASSWORD>'
 
 Then run: ```esphome run hrv.yaml```
 
+Optionally this can also be integrated with [Home Assistant](https://www.home-assistant.io/) to provide nicer UI and automations etc 
+
 ## Display
 ![](assets/hrv-display.png)
 
