@@ -5,6 +5,8 @@ The software will automatically switch between heating and cooling mode dependin
 
 Setting the mode to 'off' will override the automatic mode setting. 
 
+**Disclosure:** This README contains affiliate links. I may earn a commission from qualifying purchases. #Ad
+
 ## Hardware
 * [ESP32-WROOM-32D Microcontroller](https://s.click.aliexpress.com/e/_DnBZ0rd)
 * [DS18B20 Temperature Sensor x2](https://s.click.aliexpress.com/e/_DlF2SIx)
