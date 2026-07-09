@@ -5,9 +5,11 @@ web_server:
   port: 80
 esphome:
   name: $hostname
-  platform: ESP32
+
+esp32:
   board: esp-wrover-kit
-  arduino_version: recommended
+  framework:
+    type: arduino
 wifi:
   ssid: !secret wifi_ssid
   password: !secret wifi_password
@@ -15,6 +17,7 @@ wifi:
 api:
   reboot_timeout: 0s
 ota:
+  - platform: esphome
 logger:
   baud_rate: 0
 
@@ -33,17 +36,17 @@ fan:
     name: "HRV Attic Fan"
     id: hrv_fan
 
-dallas:
-  pin:
-    number: GPIO13
+one_wire:
+  - platform: gpio
+    pin: GPIO13
 
 sensor:
-  - platform: dallas
+  - platform: dallas_temp
     address: 0x900621b458bd0e28
     name: "Attic Temperature"
     id: attic_temp
 
-  - platform: dallas
+  - platform: dallas_temp
     address: 0x043c18f648b6a628
     name: "House Temperature"
     id: house_temp
@@ -53,7 +56,7 @@ interval:
     then:
       - logger.log:
           format: "Comparing values: Attic: %.1f, House: %.1f"
-          args: [ 'id(attic_temp).get_temp_c()', 'id(house_temp).get_temp_c()']
+          args: [ 'id(attic_temp).state', 'id(house_temp).state']
       - if:
           condition:
             lambda: 'return id(hrv_thermostat).mode == climate::CLIMATE_MODE_OFF;'
@@ -62,7 +65,7 @@ interval:
           else:
             - if:
                 condition:
-                  lambda: 'return id(attic_temp).get_temp_c() > id(house_temp).get_temp_c();'
+                  lambda: 'return id(attic_temp).state > id(house_temp).state;'
                 then:
                   - logger.log: "Set to 'Heat' mode"
                   - lambda: |-
