@@ -27,6 +27,16 @@ wifi_password: '<PASSWORD>'
 
 Then run: ```esphome run hrv-controller.yaml```
 
+## Sync workflow
+
+This directory is mirrored from the standalone repo at `/home/i/repos/hrv-controller` through a git subtree in the SysAdmin repository.
+
+Special subtree commands from `/home/i/repos/SysAdmin`:
+
+- Pull upstream HRV repo changes into SysAdmin: `git subtree pull --prefix=esphome/hrv-controller /home/i/repos/hrv-controller master --squash`
+- Push SysAdmin subtree changes back to the standalone HRV repo: `git subtree push --prefix=esphome/hrv-controller /home/i/repos/hrv-controller master`
+- Recreate the local secrets link after subtree operations if needed: `ln -sfn ../secrets.yaml esphome/hrv-controller/secrets.yaml`
+
 Optionally this can also be integrated with [Home Assistant](https://www.home-assistant.io/) to provide nicer UI and automations etc 
 
 ## Display
