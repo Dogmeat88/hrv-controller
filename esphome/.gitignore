@@ -1,0 +1,6 @@
+# Consolidated ignore rules for the imported ESPHome tree.
+.esphome/
+.idea/
+.pioenvs/
+.piolibdeps/
+**/secrets.yaml

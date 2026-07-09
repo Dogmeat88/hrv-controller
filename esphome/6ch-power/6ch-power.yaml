@@ -1,0 +1,159 @@
+# Example config for when jp8-jp11 are all bridged - this connects all the voltage channels and allows for power to be calculated by the meter directly.
+# Boards >= v1.4 jp8-jp11 are removed and have all voltage channels connected
+
+substitutions:
+  # Change the disp_name to something you want
+  disp_name: Grid
+  # Interval of how often the power is updated
+  update_time: 1s
+  # Current Transformers:
+  #  20A/25mA SCT-006: 11143
+  #  30A/1V SCT-013-030: 8650
+  #  50A/1V SCT-013-050: 15420
+  #  50A/16.6mA SCT-010: 41334
+  #  80A/26.6mA SCT-010: 41660
+  #  100A/50ma SCT-013-000: 27518
+  #  120A/40mA: SCT-016: 41787
+  #  200A/100mA SCT-024: 27518
+  #  200A/50mA SCT-024: 55036
+  current_cal: '27025'
+  # Jameco 9VAC Transformer:
+  #  For meter versions:
+  #  >= v1.3: 7305
+  voltage_cal: '15398'
+esphome:
+  name: 6chan_energy_meter
+  platform: ESP32
+  board: nodemcu-32s
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  fast_connect: True
+logger:
+api:
+  reboot_timeout: 0s
+ota:
+  - platform: esphome
+web_server:
+  port: 80
+
+spi:
+  clk_pin: 18
+  miso_pin: 19
+  mosi_pin: 23
+
+sensor:
+  - platform: wifi_signal
+    name: ${disp_name} WiFi
+    update_interval: 60s
+  #IC1
+  - platform: atm90e32
+    cs_pin: 5
+    phase_a:
+      voltage:
+        name: ${disp_name} Volts Total
+        id: ic1Volts
+        accuracy_decimals: 1
+      current:
+        name: ${disp_name} Amps Total
+        id: ct1Amps
+      power:
+        name: ${disp_name} Watts Total
+        id: ct1Watts
+      gain_voltage: ${voltage_cal}
+      gain_ct: ${current_cal}
+    phase_b:
+      current:
+        name: ${disp_name} Amps HWC
+        id: ct2Amps
+      power:
+        name: ${disp_name} Watts HWC
+        id: ct2Watts
+      gain_voltage: ${voltage_cal}
+      gain_ct: ${current_cal}
+    phase_c:
+      current:
+        name: ${disp_name} Amps PV
+        id: ct3Amps
+        filters:
+          - lambda: "return max(0.0f, x);" # Sets any negative current to 0.0
+      power:
+        name: ${disp_name} Watts PV
+        id: ct3Watts
+        filters:
+          - lambda: "return max(0.0f, x);" # Sets any negative power to 0.0
+      gain_voltage: ${voltage_cal}
+      gain_ct: ${current_cal}
+    frequency:
+      name: ${disp_name} Freq A
+    line_frequency: 50Hz
+    gain_pga: 1X
+    update_interval: ${update_time}
+
+  - platform: template
+    name: ${disp_name} Import Watts
+    id: importWatts
+    lambda: |
+      if (id(ct1Watts).state < 0) {
+        return 0;
+      } else {
+        return id(ct1Watts).state;
+      }
+    accuracy_decimals: 1
+    unit_of_measurement: W
+    device_class: energy
+    update_interval: ${update_time}
+  - platform: template
+    name: ${disp_name} Export Watts
+    id: exportWatts
+    lambda: |
+      if (id(ct1Watts).state > 0) {
+        return 0;
+      } else {
+        return abs(id(ct1Watts).state);
+      }
+    accuracy_decimals: 1
+    unit_of_measurement: W
+    device_class: energy
+    update_interval: ${update_time}
+
+  #kWh
+  - platform: total_daily_energy
+    name: ${disp_name} Import kWh
+    power_id: importWatts
+    filters:
+      - multiply: 0.001
+    unit_of_measurement: kWh
+    device_class: energy
+    state_class: total_increasing
+  - platform: total_daily_energy
+    name: ${disp_name} Export kWh
+    power_id: exportWatts
+    filters:
+      - multiply: 0.001
+    unit_of_measurement: kWh
+    device_class: energy
+    state_class: total_increasing
+  - platform: total_daily_energy
+    name: ${disp_name} Solar kWh
+    power_id: ct3Watts
+    filters:
+      - multiply: 0.001
+    unit_of_measurement: kWh
+    device_class: energy
+    state_class: total_increasing
+  - platform: total_daily_energy
+    name: ${disp_name} HWC kWh
+    power_id: ct2Watts
+    filters:
+      - multiply: 0.001
+    unit_of_measurement: kWh
+    device_class: energy
+    state_class: total_increasing
+
+switch:
+  - platform: restart
+    name: ${disp_name} Restart
+time:
+  - platform: sntp
+    id: sntp_time

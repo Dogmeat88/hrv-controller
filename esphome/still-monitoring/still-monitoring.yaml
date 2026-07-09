@@ -1,0 +1,84 @@
+# Still-CAM
+substitutions:
+  hostname: 'stillcam'
+web_server:
+  port: 80
+  js_include: "./stillcam-custom.js"
+esphome:
+  name: $hostname
+  platform: ESP32
+  board: esp32dev
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  fast_connect: True
+  ap:
+    ssid: "stillcam-hotspot"
+    password: "87654321"
+captive_portal:
+api:
+  reboot_timeout: 0s
+ota:
+#logger:
+
+esp32_camera_web_server:
+  - port: 8080
+    mode: stream
+
+#Camera #####################################################
+esp32_camera:
+ external_clock:
+   pin: GPIO00
+   frequency: 20MHz
+ i2c_pins:
+   sda: GPIO26
+   scl: GPIO27
+ data_pins: [GPIO5, GPIO18, GPIO19, GPIO21, GPIO36, GPIO39, GPIO34, GPIO35]
+ vsync_pin: GPIO25
+ href_pin: GPIO23
+ pixel_clock_pin: GPIO22
+ power_down_pin: GPIO32
+ name: Still Cam
+
+# Temperature Sensor #####################################################
+spi:
+  clk_pin: GPIO04
+  miso_pin: GPIO14
+  mosi_pin: GPIO15
+
+sensor:
+  - platform: max31865
+    name: "Temperature"
+    id: still_temp
+    cs_pin: GPIO13
+    update_interval: 15s
+    reference_resistance: 430 Ω
+    rtd_nominal_resistance: 100 Ω
+    rtd_wires: 2
+    mains_filter: 50 Hz
+
+#Network Info #####################################################
+text_sensor:
+  - platform: wifi_info
+    ip_address:
+      id: ip_address 
+      name: IP Address
+
+#Display #####################################################
+font:
+  - file: "RobotoCondensed-Bold.ttf"
+    id: fontlarge
+    size: 40
+
+i2c:
+  sda: GPIO02
+  scl: GPIO16
+
+display:
+  - platform: ssd1306_i2c
+    model: "SSD1306 128x64"
+    address: 0x3C
+    lambda: |-
+     it.printf(10, 10, id(fontlarge), "%.1f°C", id(still_temp).state);
+
+      
