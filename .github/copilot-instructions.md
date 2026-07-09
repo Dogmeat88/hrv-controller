@@ -20,7 +20,7 @@ Notable browser-managed device:
 - For the WiCAN device at `192.168.1.165`, prefer Chrome DevTools MCP for interactive administration and targeted HTTP requests for read-only inspection because SSH is not available.
 - Treat the router and Proxmox host as separate environments with separate command sets and validation steps.
 - Prefer native platform tools over generic Linux workarounds when available.
-- Use the `openwrt-gateway` skill for the main router, `openwrt-ap` for the access point, and the Proxmox skill for virtualization, container, VM, storage, or cluster tasks.
+- Use the `openwrt-gateway` skill for the main router, `openwrt-ap` for the access point, the `esphome` skill for ESPHome configuration, compile, upload, and secrets workflow tasks, and the Proxmox skill for virtualization, container, VM, storage, or cluster tasks.
 - Keep the system-specific skill files current when hostnames, addresses, roles, services, mounts, or operating procedures change.
 - Keep version information current in the system-specific skill files, including platform, application, package, or image-tag details when they matter operationally.
 - When new Proxmox containers or VMs are created or discovered, add a dedicated guest skill for each and record the updated inventory in the workspace metadata.
