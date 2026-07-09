@@ -1,2 +1,6 @@
-.continue/
-wget-log
+# Consolidated ignore rules for the standalone HRV ESPHome repo.
+.esphome/
+.idea/
+.pioenvs/
+.piolibdeps/
+secrets.yaml
