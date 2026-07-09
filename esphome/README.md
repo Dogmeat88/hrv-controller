@@ -13,7 +13,6 @@ Imported configs:
 - `6ch-power`
 - `export-diversion-controller`
 - `export-meter`
-- `ha-voice`
 - `hrv-controller`
 - `pv-hwc-monitor`
 - `pv-power-monitor`

@@ -26,6 +26,7 @@ esp32:
 logger:
 api:
 ota:
+  - platform: esphome
 
 dashboard_import:
   package_import_url: github://esphome/firmware/voice-assistant/m5stack-atom-echo.yaml@main
@@ -194,11 +195,5 @@ switch:
       - script.execute: reset_led
     on_turn_off:
       - script.execute: reset_led
-
-external_components:
-  - source: github://pr#5230
-    components:
-      - esp_adf
-    refresh: 0s
 
 esp_adf:

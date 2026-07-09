@@ -5,7 +5,8 @@ web_server:
   port: 80
 esphome:
   name: $hostname
-  platform: ESP32
+
+esp32:
   board: nodemcu-32s
 wifi:
   ssid: !secret wifi_ssid
@@ -14,6 +15,7 @@ wifi:
 api:
   reboot_timeout: 0s
 ota:
+  - platform: esphome
 logger:
 
 i2c:
@@ -37,11 +39,12 @@ switch:
     id: diversion_relay
     name: "Diversion Relay"
 
-dallas:
-  - pin: GPIO25
+one_wire:
+  - platform: gpio
+    pin: GPIO25
 
 sensor:
-  - platform: dallas
+  - platform: dallas_temp
     address: 0xfa77b3d443f55c28
     name: "HWC Temperature"
     id: hwc_temp

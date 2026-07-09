@@ -23,7 +23,8 @@ substitutions:
   voltage_cal: '15398'
 esphome:
   name: 6chan_energy_meter
-  platform: ESP32
+
+esp32:
   board: nodemcu-32s
 wifi:
   ssid: !secret wifi_ssid
@@ -33,6 +34,7 @@ logger:
 api:
   reboot_timeout: 0s
 ota:
+  - platform: esphome
   - platform: esphome
 web_server:
   port: 80
