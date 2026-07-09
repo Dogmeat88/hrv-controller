@@ -1,0 +1,180 @@
+substitutions:
+  hostname: 'hrv'
+  devicename: HRV Controller
+  temp_valid_min_c: '-20.0'
+  temp_valid_max_c: '60.0'
+  mode_hysteresis_c: '1.0'
+  min_fan_speed_pct: '25'
+  max_fan_speed_pct: '100'
+  temp_diff_full_speed_c: '8.0'
+esphome:
+  name: $hostname
+
+esp32:
+  board: esp-wrover-kit
+  framework:
+    type: arduino
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  fast_connect: True
+api:
+  reboot_timeout: 0s
+  encryption:
+    key: !secret hrv_api_encryption_key
+ota:
+  - platform: esphome
+    password: !secret hrv_ota_password
+logger:
+  baud_rate: 0
+
+output:
+  - platform: ac_dimmer
+    id: hrv_motor
+    gate_pin: GPIO18
+    zero_cross_pin:
+      number: GPIO19
+      mode: INPUT
+      inverted: yes
+
+fan:
+  - platform: speed
+    output: hrv_motor
+    name: "HRV Attic Fan"
+    id: hrv_fan
+
+one_wire:
+  - platform: gpio
+    pin: GPIO13
+
+sensor:
+  - platform: dallas_temp
+    address: 0x900621b458bd0e28
+    name: "Attic Temperature"
+    id: attic_temp
+
+  - platform: dallas_temp
+    address: 0x043c18f648b6a628
+    name: "House Temperature"
+    id: house_temp
+
+  - platform: template
+    name: "HRV Target Fan Speed"
+    id: hrv_target_speed_sensor
+    unit_of_measurement: "%"
+    accuracy_decimals: 0
+    update_interval: 60s
+    lambda: |-
+      return id(hrv_target_speed);
+
+  - platform: template
+    name: "HRV Temperature Differential"
+    id: hrv_temp_diff_sensor
+    unit_of_measurement: "C"
+    accuracy_decimals: 1
+    device_class: temperature
+    state_class: measurement
+    update_interval: 60s
+    lambda: |-
+      return fabsf(id(attic_temp).state - id(house_temp).state);
+
+globals:
+  - id: hrv_target_speed
+    type: int
+    restore_value: no
+    initial_value: '25'
+
+interval:
+  - interval: 1min
+    then:
+      - logger.log:
+          format: "Comparing values: Attic: %.1f, House: %.1f"
+          args: [ 'id(attic_temp).state', 'id(house_temp).state']
+      - lambda: |-
+          const float diff = fabsf(id(attic_temp).state - id(house_temp).state);
+          const float span = ${temp_diff_full_speed_c};
+          const float normalized = span <= 0.0f ? 1.0f : std::min(diff / span, 1.0f);
+          const float min_speed = ${min_fan_speed_pct};
+          const float max_speed = ${max_fan_speed_pct};
+          id(hrv_target_speed) = static_cast<int>(roundf(min_speed + normalized * (max_speed - min_speed)));
+      - if:
+          condition:
+            lambda: |-
+              const float attic = id(attic_temp).state;
+              const float house = id(house_temp).state;
+              return isnan(attic) || isnan(house) ||
+                     attic < ${temp_valid_min_c} || attic > ${temp_valid_max_c} ||
+                     house < ${temp_valid_min_c} || house > ${temp_valid_max_c};
+          then:
+            - logger.log: "Skipping mode update due to invalid temperature reading"
+          else:
+            - if:
+                condition:
+                  lambda: 'return id(hrv_thermostat).mode == climate::CLIMATE_MODE_OFF;'
+                then:
+                  - logger.log: "Override enabled... preventing mode update"
+                else:
+                  - if:
+                      condition:
+                        lambda: 'return id(attic_temp).state > id(house_temp).state + ${mode_hysteresis_c};'
+                      then:
+                        - if:
+                            condition:
+                              lambda: 'return id(hrv_thermostat).mode == climate::CLIMATE_MODE_HEAT;'
+                            then:
+                              - logger.log: "Heat mode already active"
+                            else:
+                              - logger.log: "Set to ''Heat'' mode"
+                              - lambda: |-
+                                  auto call = id(hrv_thermostat).make_call();
+                                  call.set_mode("HEAT");
+                                  call.perform();
+                      else:
+                        - if:
+                            condition:
+                              lambda: 'return id(attic_temp).state < id(house_temp).state - ${mode_hysteresis_c};'
+                            then:
+                              - if:
+                                  condition:
+                                    lambda: 'return id(hrv_thermostat).mode == climate::CLIMATE_MODE_COOL;'
+                                  then:
+                                    - logger.log: "Cool mode already active"
+                                  else:
+                                    - logger.log: "Set to ''Cool'' mode"
+                                    - lambda: |-
+                                        auto call = id(hrv_thermostat).make_call();
+                                        call.set_mode("COOL");
+                                        call.perform();
+                            else:
+                              - logger.log: "Within hysteresis band... keeping current mode"
+    startup_delay: 90s
+
+climate:
+  - platform: thermostat
+    name: "HRV Thermostat"
+    id: hrv_thermostat
+    sensor: house_temp
+    min_cooling_off_time: 300s
+    min_cooling_run_time: 300s
+    min_heating_off_time: 300s
+    min_heating_run_time: 300s
+    min_idle_time: 30s
+    heat_action:
+      - lambda: |-
+          auto call = id(hrv_fan).make_call();
+          call.set_state(true);
+          call.set_speed(id(hrv_target_speed));
+          call.perform();
+    cool_action:
+      - lambda: |-
+          auto call = id(hrv_fan).make_call();
+          call.set_state(true);
+          call.set_speed(id(hrv_target_speed));
+          call.perform();
+    idle_action:
+      - fan.turn_off: hrv_fan
+    default_preset: Default
+    preset:
+      - name: Default
+        default_target_temperature_high: 19
+        default_target_temperature_low: 18

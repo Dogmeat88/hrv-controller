@@ -25,7 +25,7 @@ wifi_ssid: '<SSID>'
 wifi_password: '<PASSWORD>'
 ````
 
-Then run: ```esphome run hrv.yaml```
+Then run: ```esphome run hrv-controller.yaml```
 
 Optionally this can also be integrated with [Home Assistant](https://www.home-assistant.io/) to provide nicer UI and automations etc 
 
