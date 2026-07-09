@@ -124,7 +124,7 @@ interval:
                             then:
                               - logger.log: "Heat mode already active"
                             else:
-                              - logger.log: "Set to ''Heat'' mode"
+                              - logger.log: "Set to 'Heat' mode"
                               - lambda: |-
                                   auto call = id(hrv_thermostat).make_call();
                                   call.set_mode("HEAT");
@@ -140,7 +140,7 @@ interval:
                                   then:
                                     - logger.log: "Cool mode already active"
                                   else:
-                                    - logger.log: "Set to ''Cool'' mode"
+                                    - logger.log: "Set to 'Cool' mode"
                                     - lambda: |-
                                         auto call = id(hrv_thermostat).make_call();
                                         call.set_mode("COOL");
